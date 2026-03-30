@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-select=none">
+    <title>I'm sorry love, vent your anger</title>
+    <style>
+        :root { --gold: #ffcc00; --red: #ff4757; --grey: #1a1a1a; --dark: #000000; --pink: #ff85a2; --blue: #3498db; --green: #2ed573; --orange: #ffa502; }
+        
+        body {
+            margin: 0; height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; background: var(--grey); 
+            font-family: 'Segoe UI', sans-serif; overflow: hidden;
+            transition: background 2s ease; touch-action: manipulation;
+        }
+
+        #story-box {
+            position: absolute; top: 15px; width: 85%; background: var(--dark);
+            padding: 12px; border-radius: 15px; text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 10;
+            border: 1px solid rgba(255,255,255,0.1); transition: 0.8s;
+        }
+
+        #dialogue { font-size: 0.9rem; font-weight: bold; color: #fff; }
+
+        .stage { display: flex; align-items: center; gap: 40px; margin-top: 40px; position: relative; }
+        .char-container { display: flex; flex-direction: column; align-items: center; z-index: 5; }
+        #zee, #dee { font-size: 85px; transition: 0.1s; position: relative; }
+        
+        #home-bg { position: absolute; font-size: 150px; opacity: 0; transition: 2s; transform: scale(0.5); z-index: 1; }
+
+        .hud { display: flex; flex-direction: column; gap: 2px; margin-bottom: 10px; width: 90px; text-align: center; transition: opacity 0.5s; }
+        .player-name { color: white; font-size: 10px; font-weight: 900; text-transform: uppercase; margin-bottom: 2px; }
+        .hud-label { color: #888; font-size: 7px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+        .mini-meter { width: 100%; height: 8px; background: #333; border-radius: 4px; overflow: hidden; border: 1px solid #000; }
+        #rage-fill { width: 0%; height: 100%; background: var(--gold); transition: width 0.2s; }
+        
+        .rage-full { box-shadow: 0 0 15px var(--gold); animation: rage-glow 0.8s infinite alternate !important; }
+        @keyframes rage-glow { from { filter: brightness(1); } to { filter: brightness(1.8); } }
+        #dee-hp-fill { width: 100%; height: 100%; background: var(--green); transition: width 0.3s; }
+
+        .punch-anim { animation: lunge 0.2s forwards; }
+        .kick-anim { animation: kick-lunge 0.35s forwards; }
+        .recoil { animation: recoil-bounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        @keyframes lunge { 0% { transform: translateX(0); } 50% { transform: translateX(130px); } 100% { transform: translateX(0); } }
+        @keyframes kick-lunge { 0% { transform: translateX(0); } 50% { transform: translateX(150px) scale(1.2) rotate(-15deg); } 100% { transform: translateX(0); } }
+        @keyframes recoil-bounce { 0% { transform: translateX(0); } 50% { transform: translateX(-100px) rotate(-25deg); } 100% { transform: translateX(0); } }
+
+        #skill-bar { position: absolute; bottom: 30px; display: flex; gap: 8px; width: 90%; justify-content: center; }
+        .skill-btn { background: #222; color: white; border: 1px solid #444; padding: 15px; border-radius: 12px; font-weight: bold; flex: 1; font-size: 0.8rem; display: flex; flex-direction: column; align-items: center; }
+        #rage-btn { border: 2px solid var(--gold); background: #5a4a00; color: var(--gold); display: none; animation: pulse 1s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+        #btn-group { display: none; flex-direction: column; gap: 12px; margin-top: 30px; width: 80%; animation: fadeIn 1s ease-in; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .btn { padding: 15px; border-radius: 30px; border: none; font-weight: bold; cursor: pointer; font-size: 0.9rem; box-shadow: 0 5px 15px rgba(0,0,0,0.4); }
+        #forgive-btn { background: var(--green); color: white; }
+        #retry-btn { background: var(--red); color: white; }
+        #hug-btn { background: var(--orange); color: white; display: none; margin-top: 10px; }
+
+        .hit-text { position: absolute; font-weight: 900; font-style: italic; pointer-events: none; animation: pop-up 0.4s forwards; z-index: 20; }
+        @keyframes pop-up { 0% { transform: scale(0.5); opacity: 1; } 100% { transform: translate(var(--rx), var(--ry)) scale(1.8); opacity: 0; } }
+
+        #flash-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: white; opacity: 0; pointer-events: none; transition: 1.5s; z-index: 100; }
+    </style>
+</head>
+<body>
+    <div id="flash-overlay"></div>
+    <div id="story-box"><div id="dialogue">I'm sorry I messed up love, vent your anger</div></div>
+    
+    <div class="stage">
+        <div id="home-bg">🏠</div>
+        <div class="char-container">
+            <div class="hud" id="zee-hud">
+                <div class="player-name">ZEE</div>
+                <div class="hud-label">RAGE</div>
+                <div class="mini-meter"><div id="rage-fill"></div></div>
+            </div>
+            <div id="zee">😤</div>
+        </div>
+        <div class="char-container">
+            <div class="hud" id="dee-hud">
+                <div class="player-name">DEE</div>
+                <div class="hud-label">LIFE</div>
+                <div class="mini-meter"><div id="dee-hp-fill"></div></div>
+            </div>
+            <div id="dee">🧍‍♂️</div>
+        </div>
+    </div>
+
+    <div id="btn-group">
+        <button class="btn" id="retry-btn" onclick="resetAnger()">Still hurting? 🥊</button>
+        <button class="btn" id="forgive-btn" onclick="finish()">Forgive ❤️</button>
+        <button class="btn" id="hug-btn" onclick="hugAction()">Hug 🫂</button>
+    </div>
+
+    <div id="skill-bar">
+        <button class="skill-btn" onclick="useSkill('punch')"><span>🥊</span>Punch</button>
+        <button class="skill-btn" onclick="useSkill('kick')"><span>🦵</span>Kick</button>
+        <button class="skill-btn" onclick="useSkill('barrage')"><span>🔥</span>Barrage</button>
+        <button class="skill-btn" id="rage-btn" onclick="useSkill('ultra')"><span>ULTRA ORA</span></button>
+    </div>
+
+    <script>
+        let hp = 100; let rage = 0; let isAttacking = false;
+        const zee = document.getElementById('zee'); const dee = document.getElementById('dee');
+        const diag = document.getElementById('dialogue');
+        const deeHpFill = document.getElementById('dee-hp-fill');
+        const rageFill = document.getElementById('rage-fill'); const rageBtn = document.getElementById('rage-btn');
+        const skillBar = document.getElementById('skill-bar'); const btnGroup = document.getElementById('btn-group');
+        const flash = document.getElementById('flash-overlay'); const home = document.getElementById('home-bg');
+        const hugBtn = document.getElementById('hug-btn');
+
+        function useSkill(type) {
+            if (hp <= 0 || isAttacking) return;
+            isAttacking = true; zee.innerText = "😠"; 
+            if (type === 'punch') { executeStrike(0.4, 30, "POW!"); setTimeout(() => { executeStrike(0.4, 30, "BAM!"); isAttacking = false; }, 200); } 
+            else if (type === 'kick') { executeStrike(1.5, 80, "CRACK!", true); setTimeout(() => isAttacking = false, 400); } 
+            else if (type === 'barrage') {
+                let count = 0; let interval = setInterval(() => { executeStrike(0.1, 15, "ORA!"); count++; if (count > 12) { clearInterval(interval); isAttacking = false; } }, 100);
+            }
+            else if (type === 'ultra') {
+                rage = 0; rageFill.style.width = "0%"; rageFill.classList.remove('rage-full'); rageBtn.style.display = "none";
+                let count = 0; let interval = setInterval(() => { executeStrike(0.2, 10, "ORA!", true, true); count++; if (count > 60) { clearInterval(interval); isAttacking = false; updateStory(); } }, 40);
+            }
+        }
+
+        function executeStrike(damage, vibration, text, shake = false, isUltra = false) {
+            zee.classList.remove('punch-anim', 'kick-anim', 'recoil');
+            void zee.offsetWidth; zee.classList.add(damage > 1 ? 'kick-anim' : 'punch-anim');
+            setTimeout(() => {
+                const isBlocked = !isUltra && Math.random() < 0.85;
+                if (isBlocked) {
+                    dee.innerText = "🛡️"; zee.classList.add('recoil');
+                    showHitText("BLOCK!", "var(--blue)");
+                    if (navigator.vibrate) navigator.vibrate(8); 
+                } else {
+                    dee.innerText = "😵"; showHitText(text); document.body.style.background = "#4b1313";
+                    if (navigator.vibrate) navigator.vibrate(vibration);
+                    if(shake) { document.body.style.animation = "shake 0.1s infinite"; setTimeout(() => document.body.style.animation = "", 150); }
+                }
+                setTimeout(() => { dee.innerText = hp > 0 ? "🤕" : "🩹"; document.body.style.background = hp > 0 ? "var(--grey)" : "var(--pink)"; }, 100);
+            }, 80);
+            hp -= damage; if (hp < 0) hp = 0;
+            deeHpFill.style.width = hp + "%";
+            if (!isUltra && rage < 100 && hp > 0) { 
+                rage += 10; rageFill.style.width = rage + "%"; 
+                if (rage >= 100) { rageFill.classList.add('rage-full'); rageBtn.style.display = "flex"; }
+            }
+            updateStory();
+        }
+
+        function showHitText(txt, color) {
+            const t = document.createElement('div'); t.className = 'hit-text'; t.innerText = txt;
+            t.style.color = color || ["#fff", "#ffcc00", "#ff4757"][Math.floor(Math.random()*3)];
+            t.style.setProperty('--rx', (Math.random() * 160 - 80) + "px");
+            t.style.setProperty('--ry', (Math.random() * -140 - 70) + "px");
+            t.style.left = (window.innerWidth / 2 + 30) + "px"; t.style.top = (window.innerHeight / 2 - 20) + "px";
+            document.body.appendChild(t); setTimeout(() => t.remove(), 400);
+        }
+
+        function updateStory() {
+            if (hp <= 98 && hp > 75) diag.innerText = "I didn't mean it all that I've said.";
+            if (hp <= 75 && hp > 45) diag.innerText = "It's okay, let it all out.";
+            if (hp <= 45 && hp > 15) diag.innerText = "I'm right here. I'm listening.";
+            if (hp <= 15 && hp > 0) diag.innerText = "I'm not going anywhere, love.";
+            if (hp <= 0) {
+                zee.innerText = "🥺"; diag.innerText = "Are you okay now?";
+                document.body.style.background = "var(--pink)"; 
+                skillBar.style.display = "none"; btnGroup.style.display = "flex";
+            }
+        }
+
+        function resetAnger() {
+            hp = 100; rage = 0; deeHpFill.style.width = "100%"; rageFill.style.width = "0%"; rageFill.classList.remove('rage-full');
+            zee.innerText = "😤"; dee.innerText = "🧍‍♂️"; diag.innerText = "I'm sorry I messed up love, vent your anger";
+            document.body.style.background = "var(--grey)"; skillBar.style.display = "flex"; rageBtn.style.display = "none"; btnGroup.style.display = "none";
+        }
+
+        function finish() {
+            document.getElementById('retry-btn').style.display = "none";
+            document.getElementById('forgive-btn').style.display = "none";
+            document.getElementById('zee-hud').style.opacity = "0";
+            document.getElementById('dee-hud').style.opacity = "0";
+            flash.style.opacity = "1";
+            setTimeout(() => {
+                dee.innerText = "🏥"; zee.innerText = "👩‍⚕️"; diag.innerText = "Dee is recovering from the pain...";
+                document.body.style.background = "#ffffff"; document.getElementById('story-box').style.background = "#f0f0f0";
+                document.getElementById('dialogue').style.color = "#333"; flash.style.opacity = "0";
+                setTimeout(() => {
+                    flash.style.opacity = "1";
+                    setTimeout(() => {
+                        dee.innerText = "😊"; zee.innerText = "🥰"; home.style.opacity = "0.2"; home.style.transform = "scale(1)";
+                        diag.innerText = "He's home now. He missed you.";
+                        document.body.style.background = "#fff9e6"; document.getElementById('story-box').style.background = "white";
+                        flash.style.opacity = "0";
+                        hugBtn.style.display = "block";
+                    }, 1500);
+                }, 3000);
+            }, 1500);
+        }
+
+        function hugAction() {
+            hugBtn.style.display = "none";
+            zee.style.display = "none";
+            dee.innerText = "🫂";
+            diag.innerText = "Everything is okay now. ❤️";
+            document.body.style.background = "#ffd700";
+            if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            for(let i=0; i<15; i++) {
+                setTimeout(() => {
+                    const h = document.createElement('div');
+                    h.style.position = 'absolute'; h.style.left = Math.random()*100+'vw'; h.style.top = '100vh';
+                    h.innerText = '❤️'; h.style.fontSize = '24px'; h.style.animation = 'floatUp 2s forwards';
+                    document.body.appendChild(h);
+                }, i*100);
+            }
+        }
+    </script>
+    <style> @keyframes floatUp { to { transform: translateY(-110vh); opacity: 0; } } </style>
+</body>
+</html>
